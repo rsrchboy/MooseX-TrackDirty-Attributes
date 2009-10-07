@@ -32,32 +32,16 @@ our $VERSION = '0.01';
     use Moose;
     use MooseX::TrackDirty::Attributes;
 
-    has master => (
-        is              => 'rw',
-        isa             => 'Str',
-        lazy_build      => 1,
-        is_clear_master => 1,
-    );
+    # one_is_dirty() is generated w/lazy_build
+    has one => (is => 'rw', lazy_build => 1);
+    
+    # dirtyness "accessor" is generated as two_isnt_clean()
+    has two => (is => 'rw', default => 'foo', dirty => 'two_isnt_clean');
 
-    my @opts = (
-        is => 'ro', isa => 'Str', clear_master => 'master', lazy_build => 1,
-    );
+    # we do not track three's cleanliness
+    has three => (is => 'rw', default => 'foo', track_dirty => 0);
 
-    has sub1 => @opts; 
-    has sub2 => @opts;
-    has sub3 => @opts;
-
-    sub _build_sub1 { shift->master . "1" }
-    sub _build_sub2 { shift->master . "2" }
-    sub _build_sub3 { shift->master . "3" }
-
-    sub some_sub {
-        # ... 
-
-        # clear master, sub[123] in one fell swoop
-        $self->clear_master;
-
-    }
+    # ...etc
 
 =head1 WARNING!
 
@@ -71,18 +55,10 @@ I'll try to preserve this modules behaviour, but no promises at the moment.
 
 =head1 DESCRIPTION
 
-MooseX::TrackDirty::Attributes does the necessary metaclass fiddling to allow an
-clearing one attribute to be cascaded through to other attributes as well,
-calling their clearers.  
-
-The intended purpose of this is to assist in situations where the value of one
-attribute is derived from the value of another attribute -- say a situation
-where the secondary value is expensive to derive and is thus lazily built.  A
-change to the primary attribute's value would invalidate the secondary value
-and as such the secondary should be cleared.  While it could be argued that
-this is trivial to do manually for a few attributes, once we consider
-subclassing and adding in roles the ability to "auto-clear", as it were, is
-a valuable trait.  (Sorry, couldn't resist.)
+MooseX::TrackDirty::Attributes does the necessary metaclass fiddling to track
+if attributes are dirty; that is, if they're set to some value not from a
+builder, default, or construction.  An attribute can be returned to a clean
+state by invoking its clearer.
 
 =head1 CAVEAT
 
@@ -93,22 +69,22 @@ option in the not-too-distant-future.
 =head1 ATTRIBUTE OPTIONS
 
 We install an attribute metaclass trait that provides two additional
-atttribute options, as well as wraps the generated clearer method for a
-designated "master" attribute.  By default, use'ing this module causes this
-trait to be installed for all attributes in the package.
+atttribute options, as well as wraps the generated clearer and writer/accessor 
+methods of the attribute.  By default, use'ing this module causes this
+trait to be installed for all attributes defined in the package.
 
 =over 4
 
-=item is_clear_master => (0|1)
+=item track_dirty => (0|1)
 
-If set to 1, we wrap this attribute's clearer with a sub that looks for other
-attributes to clear.
+If true (the default), we track this attrbutes dirtiness and wrap any
+generated clearer, setter or accessor methods.
 
-=item clear_master => Str
+=item dirty => Str
 
-Marks this attribute as one that should be cleared when the named attribute's
-clearer is called.  Note that no checking is done to ensure that the named
-master is actually an attribute in the class.
+If set, create a "dirtiness accessor".  Default is to not create one.  If
+lazy_build is specified, a method is generated with "foo_is_dirty", where foo
+is the attribute name.
 
 =back
 
@@ -269,15 +245,6 @@ L<http://cpanratings.perl.org/d/MooseX-TrackDirty::Attributes>
 L<http://search.cpan.org/dist/MooseX-TrackDirty::Attributes/>
 
 =back
-
-
-=head1 ACKNOWLEDGEMENTS
-
-L<MooseX::AlwaysCoerce>, for inspiring me to do this in a slightly more sane
-fashion than I was previously.
-
-And of course the L<Moose> team, who have made my life significantly easier
-(and more fun!) since 0.17 :)
 
 =head1 COPYRIGHT & LICENSE
 
