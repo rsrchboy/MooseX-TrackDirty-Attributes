@@ -1,0 +1,14 @@
+blib*
+Makefile
+Makefile.old
+MANIFEST.bak
+*.bak
+Build
+_build*
+pm_to_blib*
+*.tar.gz
+.lwpcookies
+MooseX-TrackDirty-Attributes-*
+cover_db
+META.yml
+inc/
