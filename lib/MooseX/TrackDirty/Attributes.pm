@@ -10,7 +10,7 @@ use Moose::Util::MetaRole;
 use Carp;
 
 # debugging
-use Smart::Comments '###', '####';
+#use Smart::Comments '###', '####';
 
 Moose::Exporter->setup_import_methods;
 
