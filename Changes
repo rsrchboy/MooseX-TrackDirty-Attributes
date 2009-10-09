@@ -1,5 +1,9 @@
 Revision history for MooseX-TrackDirty-Attributes
 
+0.02     Not yet released
+- switch our attribute option processing from the metaclass trait to the
+  attribute metaclass trait
+
 0.01     Tue Oct  6 21:34:48 PDT 2009 
 - First version, released on an (possibly) unsuspecting world.
 

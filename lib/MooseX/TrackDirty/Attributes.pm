@@ -131,26 +131,27 @@ is the attribute name.
 
         #$self->associated_class->add_after_method_modifier($self->clearer, sub { 
     };
+
+    before _process_options => sub {
+        my ($self, $name, $options) = @_;
+
+        ### before _process_options: $name
+        $options->{dirty} = $name.'_is_dirty' 
+            unless exists $options->{dirty} || !$options->{lazy_build};
+
+        return;
+    };
+
 }
 {
     package MooseX::TrackDirty::Attributes::Role::Meta::Class;
     use namespace::autoclean;
     use Moose::Role;
 
-    around add_attribute => sub {
-        my $next = shift;
-        my $self = shift;
-        my ($what, %opts) = @_;
+    sub get_all_dirtiable_attributes { warn }
 
-        ### in class role: $opts{lazy_build}
-        $opts{dirty} = $what.'_is_dirty' 
-            unless exists $opts{dirty} || !$opts{lazy_build};
-
-        $self->$next($what, %opts);
-    };
-
-    #sub get_all_dirty_attributes { warn }
 }
+
 {
     package MooseX::TrackDirty::Attributes::Role::Class;
     use namespace::autoclean;
