@@ -3,7 +3,7 @@
 #
 # Author:  Chris Weyl (cpan:RSRCHBOY), <cweyl@alumni.drew.edu>
 # Company: No company, personal work
-# Created: 10/06/2009
+# Created: 10/08/2009
 #
 # Copyright (c) 2009  <cweyl@alumni.drew.edu>
 #
@@ -16,7 +16,7 @@
 
 =head1 NAME
 
-02-track.t -  
+03-native-traits.t - test against native attribute helpers 
 
 =head1 DESCRIPTION 
 
@@ -33,32 +33,59 @@ use warnings;
 
 use English qw{ -no_match_vars };  # Avoids regex performance penalty
 
-use Test::More 0.92;
+use Test::More; # tests => XX;
 
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-use test1;
+use TestNative;
 
-=head2 testfoo....
+$SIG{__WARN__} = sub { };
 
-=cut
+my %traits = %TestNative::traits; 
 
-my $one = test1->new;
+for my $trait (keys %traits) {
 
-isa_ok $one, 'test1';
-can_ok $one, 'one_is_dirty'; 
+    diag "Testing $trait trait";
+    my $isdirty = $trait . '_is_dirty';
 
-ok !$one->one_is_dirty, 'one is not dirty';
+    for my $write (@{$traits{$trait}->{write}}) {
+        
+        my $test = TestNative->new;
+        my $method = $trait . '_' . $write;
+        ok !$test->$isdirty, "clean before $method";
+        eval { $test->$method(2 => 3); };
+        ok $test->$isdirty, "dirty after $method";
+    }
 
-$one->one('dirrrrrty');
-ok $one->one_is_dirty, 'one is dirty';
+    for my $write (@{$traits{$trait}->{write_sub}}) {
+        
+        my $test = TestNative->new;
+        my $method = $trait . '_' . $write;
+        ok !$test->$isdirty, "clean before $method";
+        #eval { $test->$method(sub { }); };
+        $test->$method(sub { 1 });
+        ok $test->$isdirty, "dirty after $method";
+    }
 
-$one->clear_one;
-ok !$one->one_is_dirty, 'one is not dirty after clearing';
+    for my $read (@{$traits{$trait}->{read}}) {
 
-is $one->one, 'sparkley!', 'builds correctly';
-ok !$one->one_is_dirty, 'one is not dirty after building';
+        my $test = TestNative->new;
+        my $method = $trait . '_' . $read;
+        ok !$test->$isdirty, "clean before $method";
+        $test->$method(2);
+        ok !$test->$isdirty, "clean after $method";
+    }
+
+    for my $read (@{$traits{$trait}->{read_sub}}) {
+
+        my $test = TestNative->new;
+        my $method = $trait . '_' . $read;
+        ok !$test->$isdirty, "clean before $method";
+        $test->$method(sub { });
+        ok !$test->$isdirty, "clean after $method";
+    }
+}
 
 done_testing;
 

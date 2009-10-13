@@ -10,7 +10,7 @@ use Moose::Util::MetaRole;
 use Carp;
 
 # debugging
-use Smart::Comments '###', '####';
+#use Smart::Comments '###', '####';
 
 Moose::Exporter->setup_import_methods;
 
@@ -20,11 +20,11 @@ MooseX::TrackDirty::Attributes - Track dirtied attributes
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -73,7 +73,8 @@ but $self->hashref->{foo} = 'bar' would not.
 
 Some attributes are designed to be used at this level; namely those that
 employ an attribute helper trait to interface with the lower-level bits
-directly.  Support for tracking dirtiness at that level is in the works.
+directly.  Support for tracking dirtiness at that level is in the works;
+right now Array and Hash trait helpers are tracked.
 
 =head1 ATTRIBUTE OPTIONS
 
@@ -123,7 +124,8 @@ accessor (used as a setter) is invoked.
     my %sullies = (
         # note we handle "accessor" separately 
         'Hash'  => [ qw{ set clear delete } ],
-        'Array' => [ qw{ push pop unshift shift set clear insert splice delete } ],
+        'Array' => [ qw{ push pop unshift shift set clear insert splice delete
+                         sort_in_place } ],
         # FIXME ...
     );
 
@@ -143,7 +145,6 @@ accessor (used as a setter) is invoked.
         my $class = $self->associated_class;
         my $name  = $self->name;
 
-        # our is_dirty "accessor"
         ### is_dirty: $self->dirty || ''
         $class->add_method($self->dirty, sub { shift->_is_dirty($name) }) 
             if $self->has_dirty;
@@ -152,13 +153,13 @@ accessor (used as a setter) is invoked.
             $self->clearer => sub { shift->_mark_clean($name) }
         ) if $self->has_clearer;
 
-        # if we're set, we're dirty (cach both writer/accessor
+        # if we're set, we're dirty (cach both writer/accessor)
         $class->add_after_method_modifier(
             $self->writer => sub { shift->_mark_dirty($name) }
         ) if $self->has_writer;
         $class->add_after_method_modifier(
             $self->accessor => 
-                sub { $_[0]->_mark_dirty($name) if defined $_[2] }
+                sub { $_[0]->_mark_dirty($name) if defined $_[1] }
         ) if $self->has_accessor;
 
         return;
@@ -170,36 +171,33 @@ accessor (used as a setter) is invoked.
         # check for native hashes if we can do them...
         return if 
             !$self->has_handles || 
-            #$Moose::VERSION < 0.90 || 
             !$self->track_attribute_helpers_dirty
             ;
 
         my @does = grep { $self->does($_) } keys %sullies;
 
-        ### @does
+        ##### @does
         return unless scalar @does;
         my $does = shift @does;
-
-        my %writers = map { $_ => 1 } $sullies{$does};
-
-        #my %ch = $self->_canonicalize_handles;
-        ## ## %ch
 
         # we're not going through _canonicalize_handles here, as, well, it's
         # private and I'm not sure it'll buy us anything here... right?
         my %handles = %{ $self->handles };
+        my %writers = map { $_ => 1 } @{$sullies{$does}};
         my $name    = $self->name;
         my $dirty   = sub { shift->_mark_dirty($name) };
         my $class   = $self->associated_class;
 
         # method name -> operation (provided method type)
-        ### %handles
+        #### %handles
+        #### %writers
         
         for my $method_name (keys %handles) {
 
             #### looking at: $method_name
             my $op = $handles{$method_name};
 
+            #### writer?: $writers{$op} 
             $class->add_after_method_modifier($method_name => $dirty)
                 if $writers{$op};
 
@@ -227,6 +225,7 @@ accessor (used as a setter) is invoked.
     use namespace::autoclean;
     use Moose::Role;
 
+    # FIXME implement!
     sub get_all_dirtiable_attributes { warn }
 
 }
@@ -257,7 +256,6 @@ accessor (used as a setter) is invoked.
     sub __build_track_dirty { { } }
     sub _mark_dirty { shift->__set_dirty(shift, 1) }
 }
-# can we prevent the clearer from being inlined?  Do we need to?  Are we?
 
 sub init_meta {
     shift;
