@@ -1,5 +1,7 @@
 package MooseX::TrackDirty::Attributes;
 
+# ABSTRACT: Track dirtied attributes
+
 use warnings;
 use strict;
 
@@ -14,19 +16,6 @@ use Carp;
 
 Moose::Exporter->setup_import_methods;
 
-=head1 NAME
-
-MooseX::TrackDirty::Attributes - Track dirtied attributes 
-
-=head1 VERSION
-
-Version 0.02
-
-=cut
-
-our $VERSION = '0.02';
-
-
 =head1 SYNOPSIS
 
     use Moose;
@@ -34,7 +23,7 @@ our $VERSION = '0.02';
 
     # one_is_dirty() is generated w/lazy_build
     has one => (is => 'rw', lazy_build => 1);
-    
+
     # dirtyness "accessor" is generated as two_isnt_clean()
     has two => (is => 'rw', default => 'foo', dirty => 'two_isnt_clean');
 
@@ -191,7 +180,7 @@ accessor (used as a setter) is invoked.
         # method name -> operation (provided method type)
         #### %handles
         #### %writers
-        
+
         for my $method_name (keys %handles) {
 
             #### looking at: $method_name
@@ -282,70 +271,6 @@ sub init_meta {
     return $for_class->meta;
 }
 
-=head1 AUTHOR
-
-Chris Weyl, C<< <cweyl at alumni.drew.edu> >>
-
-=head1 BUGS
-
-Please report any bugs or feature requests to 
-C<bug-moosex-trackdirty-attributes at rt.cpan.org>, or through
-the web interface at 
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=MooseX-TrackDirty::Attributes>.  
-I will be notified, and then you'llautomatically be notified of progress 
-on your bug as I make changes.
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc MooseX::TrackDirty::Attributes
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=MooseX-TrackDirty::Attributes>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/MooseX-TrackDirty::Attributes>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/MooseX-TrackDirty::Attributes>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/MooseX-TrackDirty::Attributes/>
-
-=back
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (c) 2009, Chris Weyl C<< <cweyl@alumni.drew.edu> >>.
-
-This library is free software; you can redistribute it and/or modify it under
-the terms of the GNU Lesser General Public License as published by the Free 
-Software Foundation; either version 2.1 of the License, or (at your option) 
-any later version.
-
-This library is distributed in the hope that it will be useful, but WITHOUT 
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-OR A PARTICULAR PURPOSE.
-
-See the GNU Lesser General Public License for more details.  
-
-You should have received a copy of the GNU Lesser General Public License 
-along with this library; if not, write to the 
-
-    Free Software Foundation, Inc., 
-    59 Temple Place, Suite 330, 
-    Boston, MA  02111-1307 USA
-
-=cut
-
 1; # End of MooseX::TrackDirty::Attributes
+
+__END__
