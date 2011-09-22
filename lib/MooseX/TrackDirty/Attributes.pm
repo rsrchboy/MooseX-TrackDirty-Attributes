@@ -5,8 +5,8 @@ package MooseX::TrackDirty::Attributes;
 use warnings;
 use strict;
 
+use Moose 2.0 ();
 use namespace::autoclean;
-use Moose ();
 use Moose::Exporter;
 use Moose::Util::MetaRole;
 use Carp;
@@ -14,7 +14,168 @@ use Carp;
 # debugging
 #use Smart::Comments '###', '####';
 
-Moose::Exporter->setup_import_methods;
+{
+    package MooseX::TrackDirty::Attributes::Role::Meta::Attribute;
+    use namespace::autoclean;
+    use Moose::Role;
+    use MooseX::AttributeShortcuts;
+
+    has track_dirty     => (is => 'ro', isa => 'Bool', default => 0);
+    has dirty           => (is => 'rw', isa => 'Str',  predicate => 'has_dirty');
+
+    #has value_slot    => (is => 'ro', isa => 'Str', lazy_build => 1, init_arg => undef);
+    #has tracking_slot => (is => 'ro', isa => 'Str', lazy_build => 1, init_arg => undef);
+    has value_slot    => (is => 'lazy', isa => 'Str');
+    has tracking_slot => (is => 'lazy', isa => 'Str');
+
+    sub _build_value_slot    { shift->name                        }
+    sub _build_tracking_slot { shift->name . '__DIRTY_TRACKING__' }
+
+    around slots => sub {
+        my ($orig, $self) = (shift, shift);
+        return ($self->$orig(), $self->tracking_slot);
+    };
+
+
+    # wrap our internal clearer
+    after clear_value => sub {
+        my ($self, $instance) = @_;
+
+        $instance->_mark_clean($self->name) if $self->track_dirty;
+    };
+
+    after install_accessors => sub {
+        my ($self, $inline) = @_;
+
+        ### in install_accessors, installing if: $self->track_dirty
+        return unless $self->track_dirty;
+
+        my $class = $self->associated_class;
+        my $name  = $self->name;
+
+        ### is_dirty: $self->dirty || ''
+        $class->add_method($self->dirty, sub { shift->_is_dirty($name) })
+            if $self->has_dirty;
+
+        $class->add_after_method_modifier(
+            $self->clearer => sub { shift->_mark_clean($name) }
+        ) if $self->has_clearer;
+
+        # if we're set, we're dirty (cach both writer/accessor)
+        $class->add_after_method_modifier(
+            $self->writer => sub { shift->_mark_dirty($name) }
+        ) if $self->has_writer;
+        $class->add_after_method_modifier(
+            $self->accessor =>
+                sub { $_[0]->_mark_dirty($name) if defined $_[1] }
+        ) if $self->has_accessor;
+
+        return;
+    };
+
+    after install_delegation => sub {
+        my ($self, $inline) = @_;
+
+        # check for native hashes if we can do them...
+        return if
+            !$self->has_handles ||
+            !$self->track_attribute_helpers_dirty
+            ;
+
+        my @does = grep { $self->does($_) } keys %sullies;
+
+        ##### @does
+        return unless scalar @does;
+        my $does = shift @does;
+
+        # we're not going through _canonicalize_handles here, as, well, it's
+        # private and I'm not sure it'll buy us anything here... right?
+        my %handles = %{ $self->handles };
+        my %writers = map { $_ => 1 } @{$sullies{$does}};
+        my $name    = $self->name;
+        my $dirty   = sub { shift->_mark_dirty($name) };
+        my $class   = $self->associated_class;
+
+        # method name -> operation (provided method type)
+        #### %handles
+        #### %writers
+
+        for my $method_name (keys %handles) {
+
+            #### looking at: $method_name
+            my $op = $handles{$method_name};
+
+            #### writer?: $writers{$op}
+            $class->add_after_method_modifier($method_name => $dirty)
+                if $writers{$op};
+
+            # accessor _might_ be used as a writer
+            $class->add_after_method_modifier($method_name
+                => sub { $_[0]->_mark_dirty($name) if defined $_[2] }
+            ) if $op eq 'accessor';
+        }
+
+        return;
+    };
+
+    before _process_options => sub {
+        my ($self, $name, $options) = @_;
+
+        ### before _process_options: $name
+        $options->{dirty} = $name.'_is_dirty'
+            unless exists $options->{dirty} || !$options->{lazy_build};
+
+        return;
+    };
+}
+{
+    package MooseX::TrackDirty::Attributes::Role::Meta::Attribute::WithNativeTraits;
+    use Moose::Role;
+    use namespace::autoclean;
+
+    with 'MooseX::TrackDirty::Attributes::Role::Meta::Attribute';
+
+    # There doesn't seem to be an easy way to get around writing this all out
+    my %sullies = (
+        # note we handle "accessor" separately
+        'Hash'  => [ qw{ set clear delete } ],
+        'Array' => [ qw{ push pop unshift shift set clear insert splice delete
+                         sort_in_place } ],
+        # FIXME ...
+    );
+
+    has track_attribute_helpers_dirty => (is => 'rw', isa => 'Bool', default => 1);
+
+}
+{
+    package MooseX::TrackDirty::Attributes::Role::Meta::Class;
+    use namespace::autoclean;
+    use Moose::Role;
+
+    # FIXME implement!
+    sub get_all_dirtiable_attributes { warn }
+
+}
+
+
+Moose::Exporter->setup_import_methods(
+    trait_aliases => [
+        [ 'MooseX::TrackDirty::Attributes::Role::Meta::Attribute' => 'TrackDirty' ],
+        [ .... => 'TrackNativeTrait' ],
+
+    ],
+    class_metaroles => {
+        class     => ['MooseX::TrackDirty::Attributes::Role::Meta::Class'],
+        attribute => ['MooseX::TrackDirty::Attributes::Role::Meta::Attribute'],
+    },
+    role_metaroles => {
+        applied_attribute => ['MooseX::TrackDirty::Attributes::Role::Meta::Attribute'],
+    }
+);
+
+!!42;
+
+__END__
 
 =head1 SYNOPSIS
 
@@ -68,7 +229,7 @@ right now Array and Hash trait helpers are tracked.
 =head1 ATTRIBUTE OPTIONS
 
 We install an attribute metaclass trait that provides three additional
-atttribute options, as well as wraps the generated clearer and writer/accessor 
+atttribute options, as well as wraps the generated clearer and writer/accessor
 methods of the attribute.  By default, use'ing this module causes this
 trait to be installed for all attributes defined in the package.
 
@@ -97,180 +258,3 @@ accessor (used as a setter) is invoked.
 =back
 
 =cut
-
-{
-    package MooseX::TrackDirty::Attributes::Role::Meta::Attribute;
-    use namespace::autoclean;
-    use Moose::Role;
-
-    has track_dirty     => (is => 'rw', isa => 'Bool', default => 1);
-    has dirty           => (is => 'ro', isa => 'Str',  predicate => 'has_dirty');
-
-    has track_attribute_helpers_dirty => 
-        (is => 'rw', isa => 'Bool', default => 1);
-
-    # There doesn't seem to be an easy way to get around writing this all out
-    my %sullies = (
-        # note we handle "accessor" separately 
-        'Hash'  => [ qw{ set clear delete } ],
-        'Array' => [ qw{ push pop unshift shift set clear insert splice delete
-                         sort_in_place } ],
-        # FIXME ...
-    );
-
-    # wrap our internal clearer
-    after clear_value => sub {
-        my ($self, $instance) = @_;
-
-        $instance->_mark_clean($self->name) if $self->track_dirty;
-    };
-
-    after install_accessors => sub {  
-        my ($self, $inline) = @_;
-
-        ### in install_accessors, installing if: $self->track_dirty
-        return unless $self->track_dirty;
-
-        my $class = $self->associated_class;
-        my $name  = $self->name;
-
-        ### is_dirty: $self->dirty || ''
-        $class->add_method($self->dirty, sub { shift->_is_dirty($name) }) 
-            if $self->has_dirty;
-
-        $class->add_after_method_modifier(
-            $self->clearer => sub { shift->_mark_clean($name) }
-        ) if $self->has_clearer;
-
-        # if we're set, we're dirty (cach both writer/accessor)
-        $class->add_after_method_modifier(
-            $self->writer => sub { shift->_mark_dirty($name) }
-        ) if $self->has_writer;
-        $class->add_after_method_modifier(
-            $self->accessor => 
-                sub { $_[0]->_mark_dirty($name) if defined $_[1] }
-        ) if $self->has_accessor;
-
-        return;
-    };
-
-    after install_delegation => sub {
-        my ($self, $inline) = @_;
- 
-        # check for native hashes if we can do them...
-        return if 
-            !$self->has_handles || 
-            !$self->track_attribute_helpers_dirty
-            ;
-
-        my @does = grep { $self->does($_) } keys %sullies;
-
-        ##### @does
-        return unless scalar @does;
-        my $does = shift @does;
-
-        # we're not going through _canonicalize_handles here, as, well, it's
-        # private and I'm not sure it'll buy us anything here... right?
-        my %handles = %{ $self->handles };
-        my %writers = map { $_ => 1 } @{$sullies{$does}};
-        my $name    = $self->name;
-        my $dirty   = sub { shift->_mark_dirty($name) };
-        my $class   = $self->associated_class;
-
-        # method name -> operation (provided method type)
-        #### %handles
-        #### %writers
-
-        for my $method_name (keys %handles) {
-
-            #### looking at: $method_name
-            my $op = $handles{$method_name};
-
-            #### writer?: $writers{$op} 
-            $class->add_after_method_modifier($method_name => $dirty)
-                if $writers{$op};
-
-            # accessor _might_ be used as a writer
-            $class->add_after_method_modifier($method_name 
-                => sub { $_[0]->_mark_dirty($name) if defined $_[2] } 
-            ) if $op eq 'accessor';
-        }
-
-        return;
-    };
-
-    before _process_options => sub {
-        my ($self, $name, $options) = @_;
-
-        ### before _process_options: $name
-        $options->{dirty} = $name.'_is_dirty' 
-            unless exists $options->{dirty} || !$options->{lazy_build};
-
-        return;
-    };
-}
-{
-    package MooseX::TrackDirty::Attributes::Role::Meta::Class;
-    use namespace::autoclean;
-    use Moose::Role;
-
-    # FIXME implement!
-    sub get_all_dirtiable_attributes { warn }
-
-}
-
-{
-    package MooseX::TrackDirty::Attributes::Role::Class;
-    use namespace::autoclean;
-    use Moose::Role;
-
-    has __track_dirty => (
-        traits => [ 'Hash' ],
-        is      => 'rw',
-        isa     => 'HashRef',
-        builder => '__build_track_dirty',
-        #default => sub { { } },
-
-        handles => {
-            _is_dirty             => 'exists',
-            _mark_clean           => 'delete',
-            _mark_all_clean       => 'clear',
-            _has_dirty_attributes => 'count',
-            _all_attributes_clean => 'is_empty',
-            _dirty_attributes     => 'keys',
-            __set_dirty           => 'set',
-       },
-    );   
-
-    sub __build_track_dirty { { } }
-    sub _mark_dirty { shift->__set_dirty(shift, 1) }
-}
-
-sub init_meta {
-    shift;
-    my %options = @_;
-    my $for_class = $options{for_class};
-
-    ### in init_meta: $options{for_class} 
-    Moose->init_meta(%options);
-
-    Moose::Util::MetaRole::apply_metaclass_roles(
-        for_class => $options{for_class},
-        metaclass_roles =>
-            ['MooseX::TrackDirty::Attributes::Role::Meta::Class'],
-        attribute_metaclass_roles =>
-            ['MooseX::TrackDirty::Attributes::Role::Meta::Attribute'],
-    );
-
-    Moose::Util::MetaRole::apply_base_class_roles( 
-        for_class => $options{for_class}, 
-        roles     => ['MooseX::TrackDirty::Attributes::Role::Class'],
-    );
-
-    ### applied traits, returning...
-    return $for_class->meta;
-}
-
-1; # End of MooseX::TrackDirty::Attributes
-
-__END__
