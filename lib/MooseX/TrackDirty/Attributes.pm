@@ -18,63 +18,141 @@ use Carp;
     package MooseX::TrackDirty::Attributes::Role::Meta::Attribute;
     use namespace::autoclean;
     use Moose::Role;
+    use MooseX::Types::Perl ':all';
     use MooseX::AttributeShortcuts;
 
-    has track_dirty     => (is => 'ro', isa => 'Bool', default => 0);
-    has dirty           => (is => 'rw', isa => 'Str',  predicate => 'has_dirty');
+    has dirty => (is => 'ro', isa => Identifier, lazy => 1, builder => 1);
 
-    #has value_slot    => (is => 'ro', isa => 'Str', lazy_build => 1, init_arg => undef);
-    #has tracking_slot => (is => 'ro', isa => 'Str', lazy_build => 1, init_arg => undef);
-    has value_slot    => (is => 'lazy', isa => 'Str');
-    has tracking_slot => (is => 'lazy', isa => 'Str');
+    has value_slot => (is => 'lazy', isa => 'Str');
+    has dirty_slot => (is => 'lazy', isa => 'Str');
 
-    sub _build_value_slot    { shift->name                        }
-    sub _build_tracking_slot { shift->name . '__DIRTY_TRACKING__' }
+    sub _build_dirty      { shift->name . '_is_dirty'          }
+    sub _build_value_slot { shift->name                        }
+    sub _build_dirty_slot { shift->name . '__DIRTY_TRACKING__' }
 
-    around slots => sub {
-        my ($orig, $self) = (shift, shift);
-        return ($self->$orig(), $self->tracking_slot);
-    };
+    override slots => sub { (super, shift->dirty_slot) };
 
-
-    # wrap our internal clearer
-    after clear_value => sub {
+    before set_value => sub {
         my ($self, $instance) = @_;
 
-        $instance->_mark_clean($self->name) if $self->track_dirty;
+        my $mi = $self->associated_class->get_meta_instance;
+
+        my $_get    = sub { $mi->get_slot_value($instance, @_)      };
+        my $_set    = sub { $mi->set_slot_value($instance, @_)      };
+        my $_exists = sub { $mi->is_slot_initialized($instance, @_) };
+
+        $_set->($self->dirty_slot, $_get->($self->value_slot))
+            if $_exists->($self->value_slot) && !$_exists->($self->dirty_slot);
+
+        return;
     };
+
+    after clear_value => sub { shift->clear_dirty_slot(@_) };
+
+    around _inline_clear_value => sub {
+        my ($orig, $self) = (shift, shift);
+        my ($instance) = @_;
+
+        my $mi = $self->associated_class->get_meta_instance;
+
+        return $self->$orig(@_)
+            . $mi->inline_deinitialize_slot($instance, $self->dirty_slot)
+            . ';'
+            ;
+    };
+
+    sub _inline_tracker_set {
+        my $self = shift;
+        my ($instance, $value) = @_;
+
+        # set tracker if dirty_slot is not init and value_slot value_slot is
+
+        my $mi = $self->associated_class->get_meta_instance;
+        return $mi->inline_set_slot_value($instance, $self->dirty_slot, $value);
+    }
+
+    override _inline_instance_set => sub {
+        my $self = shift;
+        my ($instance, $value) = @_;
+        # set tracker if dirty_slot is not init and value_slot value_slot is
+
+        ### $instance
+        ### $value
+
+        my $mi = $self->associated_class->get_meta_instance;
+        my $_exists = sub { $mi->inline_is_slot_initialized($instance, shift) };
+
+        # use our predicate method if we have one, as it may have been wrapped/etc
+        my $value_slot_exists
+            = $self->has_predicate
+            ? "${instance}->" . $self->predicate . '()'
+            : $_exists->($self->dirty_slot)
+            ;
+
+        my $dirty_slot_exists = $_exists->($self->dirty_slot);
+
+        my $set_tracker = $self
+            ->_inline_tracker_set(
+                $instance,
+                #'do { ' .  $self->_inline_get_value($instance) . ' } ',
+                'do { ' .  $mi->inline_get_slot_value($instance, $self->value_slot) . ' } ',
+            )
+            ;
+
+        my $code =
+            "do { $set_tracker } " .
+            "   if $value_slot_exists && !$dirty_slot_exists;"
+            ;
+
+        $code = "do { $code; " . super . " }";
+
+        ### $code
+        return $code;
+    };
+
+    # TODO remove_accessors
+
+    sub mark_tracking_dirty { shift->set_dirty_slot(@_) }
+
+    sub set_dirty_slot {
+        my ($self, $instance) = @_;
+
+        # we set the slot to be the current (aka old) value
+        $self
+            ->associated_class
+            ->get_meta_instance
+            ->set_slot_value($instance, $self->dirty_slot,
+                $self->get_value($instance, $self->value_slot),
+            )
+            ;
+
+        return;
+    }
+
+    sub clear_dirty_slot {
+        my ($self, $instance) = @_;
+
+        $self
+            ->associated_class
+            ->get_meta_instance
+            ->deinitialize_slot($instance, $self->dirty_slot)
+            ;
+
+        return;
+    }
 
     after install_accessors => sub {
         my ($self, $inline) = @_;
 
-        ### in install_accessors, installing if: $self->track_dirty
-        return unless $self->track_dirty;
-
-        my $class = $self->associated_class;
-        my $name  = $self->name;
-
-        ### is_dirty: $self->dirty || ''
-        $class->add_method($self->dirty, sub { shift->_is_dirty($name) })
-            if $self->has_dirty;
-
-        $class->add_after_method_modifier(
-            $self->clearer => sub { shift->_mark_clean($name) }
-        ) if $self->has_clearer;
-
-        # if we're set, we're dirty (cach both writer/accessor)
-        $class->add_after_method_modifier(
-            $self->writer => sub { shift->_mark_dirty($name) }
-        ) if $self->has_writer;
-        $class->add_after_method_modifier(
-            $self->accessor =>
-                sub { $_[0]->_mark_dirty($name) if defined $_[1] }
-        ) if $self->has_accessor;
-
+        # FIXME -- install "is_dirty?" accessor here
         return;
     };
 
     after install_delegation => sub {
         my ($self, $inline) = @_;
+
+        # FIXME -- skip this all for now
+        return;
 
         # check for native hashes if we can do them...
         return if
@@ -82,6 +160,7 @@ use Carp;
             !$self->track_attribute_helpers_dirty
             ;
 
+        my %sullies;
         my @does = grep { $self->does($_) } keys %sullies;
 
         ##### @does
@@ -118,15 +197,6 @@ use Carp;
         return;
     };
 
-    before _process_options => sub {
-        my ($self, $name, $options) = @_;
-
-        ### before _process_options: $name
-        $options->{dirty} = $name.'_is_dirty'
-            unless exists $options->{dirty} || !$options->{lazy_build};
-
-        return;
-    };
 }
 {
     package MooseX::TrackDirty::Attributes::Role::Meta::Attribute::WithNativeTraits;
@@ -135,24 +205,14 @@ use Carp;
 
     with 'MooseX::TrackDirty::Attributes::Role::Meta::Attribute';
 
-    # There doesn't seem to be an easy way to get around writing this all out
-    my %sullies = (
-        # note we handle "accessor" separately
-        'Hash'  => [ qw{ set clear delete } ],
-        'Array' => [ qw{ push pop unshift shift set clear insert splice delete
-                         sort_in_place } ],
-        # FIXME ...
-    );
-
-    has track_attribute_helpers_dirty => (is => 'rw', isa => 'Bool', default => 1);
-
+    # TODO...
 }
 {
     package MooseX::TrackDirty::Attributes::Role::Meta::Class;
     use namespace::autoclean;
     use Moose::Role;
 
-    # FIXME implement!
+    # TODO implement!
     sub get_all_dirtiable_attributes { warn }
 
 }
@@ -161,15 +221,12 @@ use Carp;
 Moose::Exporter->setup_import_methods(
     trait_aliases => [
         [ 'MooseX::TrackDirty::Attributes::Role::Meta::Attribute' => 'TrackDirty' ],
-        [ .... => 'TrackNativeTrait' ],
-
     ],
     class_metaroles => {
-        class     => ['MooseX::TrackDirty::Attributes::Role::Meta::Class'],
-        attribute => ['MooseX::TrackDirty::Attributes::Role::Meta::Attribute'],
+        class     => [ 'MooseX::TrackDirty::Attributes::Role::Meta::Class'     ] ,
     },
     role_metaroles => {
-        applied_attribute => ['MooseX::TrackDirty::Attributes::Role::Meta::Attribute'],
+        #applied_attribute => [ 'MooseX::TrackDirty::Attributes::Role::Meta::Attribute' ] ,
     }
 );
 
