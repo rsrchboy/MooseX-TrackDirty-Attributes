@@ -1,5 +1,7 @@
 Revision history for MooseX-TrackDirty-Attributes
 
+{{$NEXT}}
+
 0.02     Tue Oct 13 20:13:33 PDT 2009
 - switch our attribute option processing from the metaclass trait to the
   attribute metaclass trait

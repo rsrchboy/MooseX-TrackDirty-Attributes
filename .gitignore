@@ -12,3 +12,6 @@ MooseX-TrackDirty-Attributes-*
 cover_db
 META.yml
 inc/
+releases/
+build/
+.*.sw[op]
