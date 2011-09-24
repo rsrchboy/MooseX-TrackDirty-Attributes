@@ -1,9 +1,7 @@
 use strict;
 use warnings;
 
-use English qw{ -no_match_vars };  # Avoids regex performance penalty
-
-use Test::More;
+use Test::More skip_all => 'native traits not supported (yet?)';
 
 use FindBin;
 use lib "$FindBin::Bin/lib";
