@@ -5,6 +5,8 @@ package MooseX::TrackDirty::Attributes;
 use warnings;
 use strict;
 
+use v5.10;
+
 use Moose 2.0 ();
 use namespace::autoclean;
 use Moose::Exporter;
@@ -21,12 +23,15 @@ use Carp;
     use MooseX::Types::Perl ':all';
     use MooseX::AttributeShortcuts;
 
-    has dirty => (is => 'ro', isa => Identifier, lazy => 1, builder => 1);
+    has is_dirty => (is => 'ro', isa => Identifier, lazy => 1, builder => 1);
+    has original_value => (is => 'ro', isa => Identifier); #, lazy => 1, builder => 1);
+
+    sub _build_is_dirty { shift->name . '_is_dirty' }
+    #...
 
     has value_slot => (is => 'lazy', isa => 'Str');
     has dirty_slot => (is => 'lazy', isa => 'Str');
 
-    sub _build_dirty      { shift->name . '_is_dirty'          }
     sub _build_value_slot { shift->name                        }
     sub _build_dirty_slot { shift->name . '__DIRTY_TRACKING__' }
 
@@ -61,7 +66,7 @@ use Carp;
             ;
     };
 
-    sub _inline_tracker_set {
+    sub _inline_is_dirty_set {
         my $self = shift;
         my ($instance, $value) = @_;
 
@@ -71,10 +76,20 @@ use Carp;
         return $mi->inline_set_slot_value($instance, $self->dirty_slot, $value);
     }
 
+    sub _inline_is_dirty_get {
+        my $self = shift;
+        my ($instance, $value) = @_;
+
+        # set tracker if dirty_slot is not init and value_slot value_slot is
+
+        my $mi = $self->associated_class->get_meta_instance;
+        return $mi->inline_get_slot_value($instance, $self->dirty_slot, $value);
+    }
+
     override _inline_instance_set => sub {
         my $self = shift;
         my ($instance, $value) = @_;
-        # set tracker if dirty_slot is not init and value_slot value_slot is
+        # set dirty_slot from value_slot if dirty_slot is not init and value_slot value_slot is
 
         ### $instance
         ### $value
@@ -86,21 +101,20 @@ use Carp;
         my $value_slot_exists
             = $self->has_predicate
             ? "${instance}->" . $self->predicate . '()'
-            : $_exists->($self->dirty_slot)
+            : $_exists->($self->value_slot)
             ;
 
         my $dirty_slot_exists = $_exists->($self->dirty_slot);
 
-        my $set_tracker = $self
-            ->_inline_tracker_set(
+        my $set_dirty_slot = $self
+            ->_inline_is_dirty_set(
                 $instance,
-                #'do { ' .  $self->_inline_get_value($instance) . ' } ',
                 'do { ' .  $mi->inline_get_slot_value($instance, $self->value_slot) . ' } ',
             )
             ;
 
         my $code =
-            "do { $set_tracker } " .
+            "do { $set_dirty_slot } " .
             "   if $value_slot_exists && !$dirty_slot_exists;"
             ;
 
@@ -114,37 +128,71 @@ use Carp;
 
     sub mark_tracking_dirty { shift->set_dirty_slot(@_) }
 
-    sub set_dirty_slot {
+    sub original_value_get { shift->is_dirty_get(@_) }
+
+    sub is_dirty_set {
         my ($self, $instance) = @_;
 
-        # we set the slot to be the current (aka old) value
-        $self
+        return $self
             ->associated_class
             ->get_meta_instance
-            ->set_slot_value($instance, $self->dirty_slot,
-                $self->get_value($instance, $self->value_slot),
-            )
+            ->set_slot_value($instance, $self->dirty_slot)
             ;
+    }
 
-        return;
+    sub is_dirty_get {
+        my ($self, $instance) = @_;
+
+        return $self
+            ->associated_class
+            ->get_meta_instance
+            ->get_slot_value($instance, $self->dirty_slot)
+            ;
+    }
+
+    sub is_dirty_instance {
+        my ($self, $instance) = @_;
+
+        return $self
+            ->associated_class
+            ->get_meta_instance
+            ->is_slot_initialized($instance, $self->dirty_slot)
+            ;
     }
 
     sub clear_dirty_slot {
         my ($self, $instance) = @_;
 
-        $self
+        return $self
             ->associated_class
             ->get_meta_instance
             ->deinitialize_slot($instance, $self->dirty_slot)
             ;
-
-        return;
     }
+
+    override accessor_metaclass => sub {
+        my $self = shift @_;
+
+        state $classname = Moose::Meta::Class->create_anon_class(
+            superclasses => [ super ],
+            roles        => [ 'MooseX::TrackDirty::Attributes::Role::Meta::Accessor' ],
+            cache        => 1,
+        )->name;
+
+        return $classname;
+    };
 
     after install_accessors => sub {
         my ($self, $inline) = @_;
+        my $class = $self->associated_class;
 
-        # FIXME -- install "is_dirty?" accessor here
+        $class->add_method(
+            $self->_process_accessors('is_dirty' => $self->is_dirty, $inline)
+        ) if $self->is_dirty;
+        $class->add_method(
+            $self->_process_accessors('original_value' => $self->original_value, $inline)
+        ) if $self->original_value;
+
         return;
     };
 
@@ -197,6 +245,80 @@ use Carp;
         return;
     };
 
+}
+{
+    package MooseX::TrackDirty::Attributes::Role::Meta::Accessor;
+    use Moose::Role;
+    use namespace::autoclean;
+
+    sub _generate_original_value_method {
+        my $self = shift;
+        my $attr = $self->associated_attribute;
+
+        return sub {
+            confess "Cannot assign a value to a read-only accessor"
+                if @_ > 1;
+            $attr->is_dirty_get($_[0]);
+        };
+    }
+
+    sub _generate_original_value_method_inline {
+        my $self = shift;
+        my $attr = $self->associated_attribute;
+
+        return try {
+            $self->_compile_code([
+                'sub {',
+                    'if (@_ > 1) {',
+                        # XXX: this is a hack, but our error stuff is terrible
+                        $self->_inline_throw_error(
+                            '"Cannot assign a value to a read-only accessor"',
+                            'data => \@_'
+                        ) . ';',
+                    '}',
+                    $attr->_inline_is_dirty_get('$_[0]'),
+                '}',
+            ]);
+        }
+        catch {
+            confess "Could not generate inline original_value because : $_";
+        };
+    }
+
+
+    sub _generate_is_dirty_method {
+        my $self = shift;
+        my $attr = $self->associated_attribute;
+
+        return sub {
+            confess "Cannot assign a value to a read-only accessor"
+                if @_ > 1;
+            $attr->is_dirty_instance($_[0]);
+        };
+    }
+
+    sub _generate_is_dirty_method_inline {
+        my $self = shift;
+        my $attr = $self->associated_attribute;
+
+        return try {
+            $self->_compile_code([
+                'sub {',
+                    'if (@_ > 1) {',
+                        # XXX: this is a hack, but our error stuff is terrible
+                        $self->_inline_throw_error(
+                            '"Cannot assign a value to a read-only accessor"',
+                            'data => \@_'
+                        ) . ';',
+                    '}',
+                    $attr->_inline_is_dirty_instance('$_[0]'),
+                '}',
+            ]);
+        }
+        catch {
+            confess "Could not generate inline is_dirty because : $_";
+        };
+    }
 }
 {
     package MooseX::TrackDirty::Attributes::Role::Meta::Attribute::WithNativeTraits;
