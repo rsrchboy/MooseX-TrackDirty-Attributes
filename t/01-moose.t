@@ -7,18 +7,44 @@ This test exercises the Moose bits (meta, role application, etc).
 use strict;
 use warnings;
 
+{
+    package TestClass;
+
+    use Moose;
+    use MooseX::TrackDirty::Attributes;
+    use namespace::autoclean;
+
+    has one => (
+        traits     => [TrackDirty],
+        is         => 'rw',
+
+        original_value => 'original_value_of_one',
+    );
+
+    sub _build_one { 'sparkley!' }
+
+    has lazy => (is => 'rw', lazy_build => 1);
+
+}
+
 use Test::More 0.92;
 use Test::Moose;
 
-use FindBin;
-use lib "$FindBin::Bin/lib";
-use test1;
+with_immutable {
+    meta_ok 'TestClass';
+    has_attribute_ok 'TestClass', 'one';
+    can_ok  'TestClass', 'one_is_dirty', 'original_value_of_one';
 
-my $one = test1->new;
+    my $one_att_meta = TestClass->meta->get_attribute('one');
 
-isa_ok $one, 'test1';
-meta_ok $one;
-does_ok $one, 'MooseX::TrackDirty::Attributes::Role::Class';
-has_attribute_ok $one, '__track_dirty';
+    does_ok $one_att_meta, 'MooseX::TrackDirty::Attributes::Role::Meta::Attribute';
+    has_attribute_ok $one_att_meta, 'is_dirty';
+
+    does_ok
+        $one_att_meta->accessor_metaclass,
+        'MooseX::TrackDirty::Attributes::Role::Meta::Accessor',
+        ;
+
+} 'TestClass';
 
 done_testing;
