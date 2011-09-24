@@ -196,6 +196,26 @@ use Carp;
         return;
     };
 
+    before remove_accessors => sub {
+        my $self = shift @_;
+
+        # stolen from Class::MOP::Attribute
+        my $_remove_accessor = sub {
+            my ($accessor, $class) = @_;
+            if (ref($accessor) && ref($accessor) eq 'HASH') {
+                ($accessor) = keys %{$accessor};
+            }
+            my $method = $class->get_method($accessor);
+            $class->remove_method($accessor)
+                if (ref($method) && $method->isa('Class::MOP::Method::Accessor'));
+        };
+
+        $_remove_accessor->($self->is_dirty,       $self->associated_class) if $self->is_dirty;
+        $_remove_accessor->($self->original_value, $self->associated_class) if $self->original_value;
+
+        return;
+    };
+
     after install_delegation => sub {
         my ($self, $inline) = @_;
 
