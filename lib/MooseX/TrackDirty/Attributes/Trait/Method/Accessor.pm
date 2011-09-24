@@ -1,47 +1,81 @@
-package MooseX::TrackDirty::Attributes;
+package MooseX::TrackDirty::Attributes::Trait::Method::Accessor;
 
 # ABSTRACT: Track dirtied attributes
 
-use warnings;
-use strict;
-
-use Moose 2.0 ();
+use Moose::Role;
 use namespace::autoclean;
-use Moose::Exporter;
 
 # debugging
 #use Smart::Comments '###', '####';
 
-{
-    package MooseX::TrackDirty::Attributes::Trait::Attribute::WithNativeTraits;
-    use Moose::Role;
-    use namespace::autoclean;
+sub _generate_original_value_method {
+    my $self = shift;
+    my $attr = $self->associated_attribute;
 
-    with 'MooseX::TrackDirty::Attributes::Trait::Attribute';
-
-    # TODO...
-}
-{
-    package MooseX::TrackDirty::Attributes::Trait::Class;
-    use namespace::autoclean;
-    use Moose::Role;
-
-    # TODO implement!
-    sub get_all_dirtiable_attributes { warn }
-
+    return sub {
+        confess "Cannot assign a value to a read-only accessor"
+            if @_ > 1;
+        $attr->is_dirty_get($_[0]);
+    };
 }
 
-Moose::Exporter->setup_import_methods(
-    trait_aliases => [
-        [ 'MooseX::TrackDirty::Attributes::Trait::Attribute' => 'TrackDirty' ],
-    ],
-    class_metaroles => {
-        class => [ 'MooseX::TrackDirty::Attributes::Trait::Class' ],
-    },
-    role_metaroles => {
-        #applied_attribute => [ 'MooseX::TrackDirty::Attributes::Trait::Attribute' ],
-    },
-);
+sub _generate_original_value_method_inline {
+    my $self = shift;
+    my $attr = $self->associated_attribute;
+
+    return try {
+        $self->_compile_code([
+            'sub {',
+                'if (@_ > 1) {',
+                    # XXX: this is a hack, but our error stuff is terrible
+                    $self->_inline_throw_error(
+                        '"Cannot assign a value to a read-only accessor"',
+                        'data => \@_'
+                    ) . ';',
+                '}',
+                $attr->_inline_is_dirty_get('$_[0]'),
+            '}',
+        ]);
+    }
+    catch {
+        confess "Could not generate inline original_value because : $_";
+    };
+}
+
+
+sub _generate_is_dirty_method {
+    my $self = shift;
+    my $attr = $self->associated_attribute;
+
+    return sub {
+        confess "Cannot assign a value to a read-only accessor"
+            if @_ > 1;
+        $attr->is_dirty_instance($_[0]);
+    };
+}
+
+sub _generate_is_dirty_method_inline {
+    my $self = shift;
+    my $attr = $self->associated_attribute;
+
+    return try {
+        $self->_compile_code([
+            'sub {',
+                'if (@_ > 1) {',
+                    # XXX: this is a hack, but our error stuff is terrible
+                    $self->_inline_throw_error(
+                        '"Cannot assign a value to a read-only accessor"',
+                        'data => \@_'
+                    ) . ';',
+                '}',
+                $attr->_inline_is_dirty_instance('$_[0]'),
+            '}',
+        ]);
+    }
+    catch {
+        confess "Could not generate inline is_dirty because : $_";
+    };
+}
 
 !!42;
 

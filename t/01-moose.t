@@ -37,12 +37,12 @@ with_immutable {
 
     my $one_att_meta = TestClass->meta->get_attribute('one');
 
-    does_ok $one_att_meta, 'MooseX::TrackDirty::Attributes::Role::Meta::Attribute';
+    does_ok $one_att_meta, 'MooseX::TrackDirty::Attributes::Trait::Attribute';
     has_attribute_ok $one_att_meta, 'is_dirty';
 
     does_ok
         $one_att_meta->accessor_metaclass,
-        'MooseX::TrackDirty::Attributes::Role::Meta::Accessor',
+        'MooseX::TrackDirty::Attributes::Trait::Method::Accessor',
         ;
 
 } 'TestClass';
