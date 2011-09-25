@@ -9,38 +9,10 @@ use Moose 2.0 ();
 use namespace::autoclean;
 use Moose::Exporter;
 
-# debugging
-#use Smart::Comments '###', '####';
-
-{
-    package MooseX::TrackDirty::Attributes::Trait::Attribute::WithNativeTraits;
-    use Moose::Role;
-    use namespace::autoclean;
-
-    with 'MooseX::TrackDirty::Attributes::Trait::Attribute';
-
-    # TODO...
-}
-{
-    package MooseX::TrackDirty::Attributes::Trait::Class;
-    use namespace::autoclean;
-    use Moose::Role;
-
-    # TODO implement!
-    sub get_all_dirtiable_attributes { warn }
-
-}
-
 Moose::Exporter->setup_import_methods(
     trait_aliases => [
         [ 'MooseX::TrackDirty::Attributes::Trait::Attribute' => 'TrackDirty' ],
     ],
-    class_metaroles => {
-        class => [ 'MooseX::TrackDirty::Attributes::Trait::Class' ],
-    },
-    role_metaroles => {
-        #applied_attribute => [ 'MooseX::TrackDirty::Attributes::Trait::Attribute' ],
-    },
 );
 
 !!42;
