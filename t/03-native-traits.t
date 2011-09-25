@@ -10,7 +10,7 @@ use TestNative;
 
 $SIG{__WARN__} = sub { };
 
-my %traits = %TestNative::traits; 
+my %traits = %TestNative::traits;
 
 for my $trait (keys %traits) {
 

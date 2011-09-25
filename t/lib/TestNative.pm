@@ -11,7 +11,7 @@ our %traits = (
         read      => [ qw{ elements count is_empty get keys exists defined values kv } ],
         read_sub  => [ ],
         write     => [ qw{ set delete clear } ],
-        write_sub => [ ], 
+        write_sub => [ ],
     },
     array => {
         read      => [ qw{ count is_empty elements get shuffle } ],
@@ -22,7 +22,7 @@ our %traits = (
 );
 
 sub handles {
-    my ($class, $trait) = @_; 
+    my ($class, $trait) = @_;
 
     my @keys;
     push @keys, @{$traits{$trait}->{$_}} for (qw{read write read_sub write_sub});
