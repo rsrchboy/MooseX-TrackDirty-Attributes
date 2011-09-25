@@ -205,54 +205,6 @@ before remove_accessors => sub {
     return;
 };
 
-after install_delegation => sub {
-    my ($self, $inline) = @_;
-
-    # FIXME -- skip this all for now
-    return;
-
-    # check for native hashes if we can do them...
-    return if
-        !$self->has_handles ||
-        !$self->track_attribute_helpers_dirty
-        ;
-
-    my %sullies;
-    my @does = grep { $self->does($_) } keys %sullies;
-
-    ##### @does
-    return unless scalar @does;
-    my $does = shift @does;
-
-    # we're not going through _canonicalize_handles here, as, well, it's
-    # private and I'm not sure it'll buy us anything here... right?
-    my %handles = %{ $self->handles };
-    my %writers = map { $_ => 1 } @{$sullies{$does}};
-    my $name    = $self->name;
-    my $dirty   = sub { shift->_mark_dirty($name) };
-    my $class   = $self->associated_class;
-
-    # method name -> operation (provided method type)
-    #### %handles
-    #### %writers
-
-    for my $method_name (keys %handles) {
-
-        #### looking at: $method_name
-        my $op = $handles{$method_name};
-
-        #### writer?: $writers{$op}
-        $class->add_after_method_modifier($method_name => $dirty)
-            if $writers{$op};
-
-        # accessor _might_ be used as a writer
-        $class->add_after_method_modifier($method_name
-            => sub { $_[0]->_mark_dirty($name) if defined $_[2] }
-        ) if $op eq 'accessor';
-    }
-
-    return;
-};
 
 !!42;
 
