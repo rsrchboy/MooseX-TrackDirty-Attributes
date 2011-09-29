@@ -7,8 +7,6 @@ use namespace::autoclean;
 use MooseX::Types::Perl ':all';
 use MooseX::AttributeShortcuts;
 
-use v5.10;
-
 # debugging
 #use Smart::Comments '###', '####';
 
@@ -162,7 +160,7 @@ sub clear_dirty_slot {
 override accessor_metaclass => sub {
     my $self = shift @_;
 
-    state $classname = Moose::Meta::Class->create_anon_class(
+    my $classname = Moose::Meta::Class->create_anon_class(
         superclasses => [ super ],
         roles        => [ 'MooseX::TrackDirty::Attributes::Trait::Method::Accessor' ],
         cache        => 1,
