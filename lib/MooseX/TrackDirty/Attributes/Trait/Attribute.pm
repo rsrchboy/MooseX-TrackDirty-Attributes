@@ -7,6 +7,22 @@ use namespace::autoclean;
 use MooseX::Types::Perl ':all';
 use MooseX::AttributeShortcuts;
 
+use Moose::Util::MetaRole;
+use MooseX::TrackDirty::Attributes::Trait::Role;
+use MooseX::TrackDirty::Attributes::Trait::Role::Application::ToClass;
+
+# roles to help us track / do-the-right-thing when native traits are also used
+Moose::Util::MetaRole::apply_metaroles(
+    for            => __PACKAGE__->meta,
+    role_metaroles => {
+        role                    =>  [ MetaRole           ],
+        application_to_class    =>  [ ApplicationToClass ],
+        #application_to_role     => [ ToRole             ],
+        #application_to_instance => [ ToInstance         ],
+    },
+);
+
+
 # debugging
 #use Smart::Comments '###', '####';
 
