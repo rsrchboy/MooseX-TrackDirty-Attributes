@@ -40,15 +40,10 @@ sub do_tests {
         } ],
     );
 
-    # XXX huh. note weirdness between calculate_all_roles and
-    # calculate_all_roles_with_inheritance
-    TODO: {
-        local $TODO = 'something funky with does role';
-        does_ok
-            $attr, 
-            'MooseX::TrackDirty::Attributes::Trait::Attribute::Native::Trait',
-            ;
-    }
+    does_ok
+        $attr,
+        'MooseX::TrackDirty::Attributes::Trait::Attribute::Native::Trait',
+        ;
     {
         my $test = TestClass->new;
 
@@ -70,13 +65,3 @@ sub do_tests {
 }
 
 !!42;
-
-__END__
-
-note q{attribute foo's metarole classes...};
-validate_class do { TestClass->meta->application_to_class_class()} => (
-    does => [ qw{
-        MooseX::TrackDirty::Attributes::Trait::Role::Application::ToClass
-    } ],
-);
-

@@ -5,7 +5,23 @@ package MooseX::TrackDirty::Attributes::Trait::Attribute;
 use Moose::Role;
 use namespace::autoclean;
 use MooseX::Types::Perl ':all';
-use MooseX::AttributeShortcuts;
+use MooseX::AttributeShortcuts 0.009;
+
+use Moose::Util::MetaRole;
+use MooseX::TrackDirty::Attributes::Util ':all';
+use MooseX::TrackDirty::Attributes::Trait::Attribute::Native::Trait ();
+
+# roles to help us track / do-the-right-thing when native traits are also used
+Moose::Util::MetaRole::apply_metaroles(
+    for            => __PACKAGE__->meta,
+    role_metaroles => {
+        role                    => [ trait_for 'Role' ],
+        application_to_class    => [ ToClass          ],
+        application_to_role     => [ ToRole           ],
+        #application_to_instance => [ ToInstance      ],
+    },
+);
+
 
 # debugging
 #use Smart::Comments '###', '####';
@@ -180,6 +196,7 @@ after install_accessors => sub {
     my ($self, $inline) = @_;
     my $class = $self->associated_class;
 
+    ### in install_accessors...
     $class->add_method(
         $self->_process_accessors('is_dirty' => $self->is_dirty, $inline)
     ) if $self->is_dirty;
