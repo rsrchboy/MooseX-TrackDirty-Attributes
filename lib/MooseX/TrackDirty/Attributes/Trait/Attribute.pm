@@ -73,9 +73,8 @@ sub _inline_is_dirty_get {
     return $mi->inline_get_slot_value($instance, $self->dirty_slot, $value);
 }
 
-override _inline_instance_set => sub {
-    my $self = shift;
-    my ($instance, $value) = @_;
+sub _inline_set_dirty_slot_if_dirty {
+    my ($self, $instance, $value) = @_;
     # set dirty_slot from value_slot if dirty_slot is not init and value_slot value_slot is
 
     ### $instance
@@ -105,7 +104,15 @@ override _inline_instance_set => sub {
         "   if $value_slot_exists && !$dirty_slot_exists;"
         ;
 
-    $code = "do { $code; " . super . " }";
+    return $code;
+}
+
+around _inline_instance_set => sub {
+    my ($orig, $self) = (shift, shift);
+    my ($instance, $value) = @_;
+
+    my $code = $self->_inline_set_dirty_slot_if_dirty(@_);
+    $code = "do { $code; " . $self->$orig(@_) . " }";
 
     ### $code
     return $code;
