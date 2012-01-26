@@ -1,10 +1,6 @@
 use strict;
 use warnings;
 
-use Test::More;
-use Test::Moose;
-use Test::Moose::More;
-
 sub do_tests {
 
     note 'class...';

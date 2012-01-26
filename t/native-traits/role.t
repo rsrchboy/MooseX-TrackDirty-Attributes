@@ -2,8 +2,8 @@ use strict;
 use warnings;
 
 {
-    package TestClass;
-    use Moose;
+    package TestClass::Role;
+    use Moose::Role;
     use MooseX::TrackDirty::Attributes;
 
     has foo => (
@@ -19,10 +19,15 @@ use warnings;
             foo_append => 'append',
         },
     );
-
+}
+{
+    package TestClass;
+    use Moose;
+    with 'TestClass::Role';
 }
 
 use Test::More;
+use Test::Moose;
 use Test::Moose::More;
 
 require 't/funcs.pm' unless eval { require funcs };
