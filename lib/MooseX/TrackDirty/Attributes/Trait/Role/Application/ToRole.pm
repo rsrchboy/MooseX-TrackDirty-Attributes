@@ -1,4 +1,4 @@
-package MooseX::TrackDirty::Attributes::Trait::Role::Application::ToClass;
+package MooseX::TrackDirty::Attributes::Trait::Role::Application::ToRole;
 # Dist::Zilla: +PkgVersion
 
 use Moose::Role;
@@ -8,12 +8,12 @@ use Moose::Exporter;
 # debug...
 #use Smart::Comments;
 
-use MooseX::TrackDirty::Attributes::Trait::Class;
+use MooseX::TrackDirty::Attributes::Trait::Role;
 use MooseX::TrackDirty::Attributes::Trait::Attribute::Native::Trait;
 
 Moose::Exporter->setup_import_methods(
     trait_aliases => [
-        [ __PACKAGE__, 'ToClass' ],
+        [ __PACKAGE__, 'ToRole' ],
     ],
 );
 
@@ -25,8 +25,8 @@ after apply => sub {
     ### applying metaroles...
     Moose::Util::MetaRole::apply_metaroles(
         for => $class,
-        class_metaroles => {
-            class => [ MetaClassTrait ],
+        role_metaroles => {
+            role => [ MetaRoleTrait ],
         },
     );
 

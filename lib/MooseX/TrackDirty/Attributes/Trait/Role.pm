@@ -13,7 +13,7 @@ use MooseX::TrackDirty::Attributes::Trait::Role::Application::ToClass;
 
 Moose::Exporter->setup_import_methods(
     trait_aliases => [
-        [ __PACKAGE__, 'MetaRole' ],
+        [ __PACKAGE__, 'MetaRoleTrait' ],
     ],
 );
 
