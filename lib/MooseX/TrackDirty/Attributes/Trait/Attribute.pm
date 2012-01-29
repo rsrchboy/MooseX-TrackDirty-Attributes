@@ -8,15 +8,16 @@ use MooseX::Types::Perl ':all';
 use MooseX::AttributeShortcuts;
 
 use Moose::Util::MetaRole;
-use MooseX::TrackDirty::Attributes::Trait::Role;
-use MooseX::TrackDirty::Attributes::Trait::Role::Application::ToClass;
-use MooseX::TrackDirty::Attributes::Trait::Role::Application::ToRole;
+use MooseX::TrackDirty::Attributes::Util ':all';
 
 # roles to help us track / do-the-right-thing when native traits are also used
 Moose::Util::MetaRole::apply_metaroles(
     for            => __PACKAGE__->meta,
     role_metaroles => {
-        role                    => [ MetaRoleTrait ],
+        role                    => [
+            trait_for 'Role',
+            #trait_for 'Role::CompositionClassRoles',
+        ],
         application_to_class    => [ ToClass       ],
         application_to_role     => [ ToRole        ],
         #application_to_instance => [ ToInstance   ],

@@ -10,19 +10,11 @@ use Moose::Exporter;
 
 use MooseX::TrackDirty::Attributes::Trait::Attribute::Native::Trait;
 
-Moose::Exporter->setup_import_methods(
-    trait_aliases => [
-        [ __PACKAGE__, 'MetaClassTrait' ],
-    ],
-);
-
 requires 'add_role_application';
 
 # ensure that future applications of a native trait will be handled correctly
 after add_role_application => sub {
     my ($self, $application) = @_;
-
-    my $role = $application->role;
 
     return unless $application
         ->role

@@ -5,19 +5,31 @@ use Moose::Role;
 use namespace::autoclean;
 use Moose::Exporter;
 
-use MooseX::TrackDirty::Attributes::Trait::Role::Composite;
-use MooseX::TrackDirty::Attributes::Trait::Role::Application::ToClass;
+use MooseX::TrackDirty::Attributes::Util ':all';
 
 # debugging...
-#use Smart::Comments;
+use Smart::Comments;
 
-Moose::Exporter->setup_import_methods(
-    trait_aliases => [
-        [ __PACKAGE__, 'MetaRoleTrait' ],
-    ],
-);
+with trait_for 'Role::Application';
 
-requires 'composition_class_roles';
+# ensure that future applications of a native trait will be handled correctly
+after add_role => sub {
+    my ($self, $other) = @_;
+
+    #my $role = $appli->role;
+
+    warn;
+    ### checking: $other->name
+    return unless $other
+        #->role
+        ->does_role('Moose::Meta::Attribute::Native::Trait')
+        ;
+
+    ### applying to self...
+    TrackDirtyNativeTrait->meta->apply($self);
+    return;
+};
+
 
 around composition_class_roles => sub {
     my ($orig, $self) = (shift, shift);
@@ -30,3 +42,5 @@ around composition_class_roles => sub {
 };
 
 !!42;
+
+__END__
