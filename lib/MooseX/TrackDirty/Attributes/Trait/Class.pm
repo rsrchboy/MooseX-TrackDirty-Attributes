@@ -14,11 +14,12 @@ requires 'add_role_application';
 after add_role_application => sub {
     my ($self, $application) = @_;
 
+    my @roles = map { $_->name } $self->calculate_all_roles;
+    ### @roles
+
     ### in add_role_application (after)...
-    return unless $application
-        ->role
-        ->does_role('Moose::Meta::Attribute::Native::Trait::Writer')
-        ;
+    return unless $self->does_role('Moose::Meta::Attribute::Native::Trait');
+    return if $self->does_role(TrackDirtyNativeTrait);
 
     ### applying TrackDirtyNativeTrait to self: $self->name
     TrackDirtyNativeTrait->meta->apply($self);
