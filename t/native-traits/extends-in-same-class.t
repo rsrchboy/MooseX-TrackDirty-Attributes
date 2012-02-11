@@ -26,7 +26,6 @@ use warnings;
 }
 
 use Test::More;
-use Test::Moose;
 use Test::Moose::More;
 
 require 't/funcs.pm' unless eval { require funcs };
