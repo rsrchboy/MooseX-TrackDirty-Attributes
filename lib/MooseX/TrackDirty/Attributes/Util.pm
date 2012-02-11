@@ -26,3 +26,5 @@ sub AccessorNativeTrait()   { trait_for 'Method::Accessor::Native'           }
 !!42;
 
 __END__
+
+=for Pod::Coverage trait_for application Composite ^To.*$ TrackDirtyNativeTrait AccessorNativeTrait
