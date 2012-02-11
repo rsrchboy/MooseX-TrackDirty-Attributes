@@ -21,6 +21,9 @@ use warnings;
         isa     => 'Str',
         clearer => 'clear_foo',
         default => q{},
+
+        is_dirty => 'foo_is_dirty',
+
         handles => {
 
             foo_length => 'length',
@@ -41,6 +44,8 @@ validate_role 'TestClass::Trait' => (
 );
 
 {
+    can_ok 'TestClass', 'foo_is_dirty';
+
     my $meta = TestClass::Trait->meta;
     #my $foo_meta   = TestClass->meta->get_attribute('foo')->meta;
 
@@ -72,10 +77,8 @@ with_immutable {
     note 'our specialized foo tests...';
     my $foo = TestClass->meta->get_attribute('foo');
 
-    does_ok($foo->meta, [
-        'MooseX::TrackDirty::Attributes::Trait::Class',
-        'MooseX::TrackDirty::Attributes::Trait::Attribute',
-    ]);
+    does_ok($foo,       [ 'MooseX::TrackDirty::Attributes::Trait::Attribute' ]);
+    does_ok($foo->meta, [ 'MooseX::TrackDirty::Attributes::Trait::Class'     ]);
 
     validate_class ref $foo => (
 

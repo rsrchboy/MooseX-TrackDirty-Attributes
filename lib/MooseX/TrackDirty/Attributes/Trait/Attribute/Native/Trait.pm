@@ -4,19 +4,12 @@ package MooseX::TrackDirty::Attributes::Trait::Attribute::Native::Trait;
 
 use Moose::Role;
 use namespace::autoclean;
+use MooseX::TrackDirty::Attributes::Util ':all';
 
 use Class::Load 'load_class';
 
 # debugging...
 #use Smart::Comments;
-
-use MooseX::TrackDirty::Attributes::Trait::Method::Accessor::Native;
-
-Moose::Exporter->setup_import_methods(
-    trait_aliases => [
-        [ __PACKAGE__, 'TrackDirtyNativeTrait' ],
-    ],
-);
 
 # We wrap _native_accessor_class_for() to catch the generated accessor
 # classes; if they use the native Writer trait, then we apply our shim trait

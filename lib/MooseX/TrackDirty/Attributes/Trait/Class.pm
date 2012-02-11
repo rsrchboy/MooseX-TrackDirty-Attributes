@@ -3,12 +3,10 @@ package MooseX::TrackDirty::Attributes::Trait::Class;
 
 use Moose::Role;
 use namespace::autoclean;
-use Moose::Exporter;
+use MooseX::TrackDirty::Attributes::Util ':all';
 
 # debug...
 #use Smart::Comments;
-
-use MooseX::TrackDirty::Attributes::Trait::Attribute::Native::Trait;
 
 requires 'add_role_application';
 
@@ -16,11 +14,13 @@ requires 'add_role_application';
 after add_role_application => sub {
     my ($self, $application) = @_;
 
+    ### in add_role_application (after)...
     return unless $application
         ->role
         ->does_role('Moose::Meta::Attribute::Native::Trait::Writer')
         ;
 
+    ### applying TrackDirtyNativeTrait to self: $self->name
     TrackDirtyNativeTrait->meta->apply($self);
     return;
 };
