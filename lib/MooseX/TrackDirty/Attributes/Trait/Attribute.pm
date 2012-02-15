@@ -5,7 +5,7 @@ package MooseX::TrackDirty::Attributes::Trait::Attribute;
 use Moose::Role;
 use namespace::autoclean;
 use MooseX::Types::Perl ':all';
-use MooseX::AttributeShortcuts 0.009;
+use MooseX::AttributeShortcuts 0.008;
 
 use Moose::Util::MetaRole;
 use MooseX::TrackDirty::Attributes::Util ':all';
