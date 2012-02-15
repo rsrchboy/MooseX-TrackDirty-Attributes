@@ -1,5 +1,6 @@
 package MooseX::TrackDirty::Attributes::Trait::Class;
-# Dist::Zilla: +PkgVersion
+
+# ABSTRACT: Attribute metaclass helper metaclass helper trait
 
 use Moose::Role;
 use namespace::autoclean;
@@ -7,6 +8,13 @@ use MooseX::TrackDirty::Attributes::Util ':all';
 
 # debug...
 #use Smart::Comments;
+
+=method add_role_application
+
+This method is extended to ensure that if our attribute metaclass starts doing
+a native trait, that our native trait compatibility trait is also applied.
+
+=cut
 
 # ensure that future applications of a native trait will be handled correctly
 after add_role_application => sub {

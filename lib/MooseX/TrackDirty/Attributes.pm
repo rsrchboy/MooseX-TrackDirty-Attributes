@@ -19,6 +19,8 @@ Moose::Exporter->setup_import_methods(
 
 __END__
 
+=for stopwords HashRef's
+
 =head1 SYNOPSIS
 
     package Foo;
@@ -61,28 +63,38 @@ builder, default, accessor, etc.)
 
 An attribute can be returned to a clean state by invoking its clearer.
 
-=head1 WARNING!
-
-Note that the API used here is incompatible with the previous version.
-Sorry about that :\
-
 =head1 CAVEAT
 
-Note that with few exceptions we can only track
+Note that with one (significant) exceptions we can only track
 dirtiness at the very first level.  That is, if you have an attribute that is
-a HashRef, we can tell that the _attribute_ is dirty iff the actual ref
-changes, but not if the HashRef's keys/values change. e.g.
-$self->hashref({ new => 'hash' }) would render the 'hashref' attribute dirty,
-but $self->hashref->{foo} = 'bar' would not.
+a HashRef, we can tell that the _attribute_ is dirty if and only if the
+actual ref changes, but not if the HashRef's keys/values change. e.g.
+
+    $self->hashref({ new => 'hash' })
+
+would render the 'hashref' attribute dirty, but
+
+    $self->hashref->{foo} = 'bar'
+
+would not.
 
 In plainer language: we can only tell if an attribute's value is dirty if our
 accessors are used to modify its values.
 
+The exception to this is...
+
+=head1 IMPLICATIONS FOR NATIVE TRAITS
+
+We now track when a native trait accessor is used to change the contents of
+the attribute; this is considered to make the attribute value dirty.
+
+This is still new and experimental, so feedback is quite welcome :)
+
 =head1 ATTRIBUTE OPTIONS
 
 To track a given attribute, the trait must be applied.  This package exports a
-"TrackDirty" function that returns the full (ridiculously long) package nameof
-the trait.
+"TrackDirty" function that returns the full (ridiculously long) package name
+of the trait.
 
 Once applied, we have two additional options that can be passed to the
 attribute constructor (usually via 'has'):

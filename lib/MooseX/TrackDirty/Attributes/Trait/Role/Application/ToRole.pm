@@ -1,5 +1,6 @@
 package MooseX::TrackDirty::Attributes::Trait::Role::Application::ToRole;
-# Dist::Zilla: +PkgVersion
+
+# ABSTRACT: Application to role helper trait
 
 use Moose::Role;
 use namespace::autoclean;
@@ -8,6 +9,10 @@ use MooseX::TrackDirty::Attributes::Util ':all';
 
 # debug...
 #use Smart::Comments;
+
+=method apply
+
+=cut
 
 around apply => sub {
     my ($next, $self, $role1, $role2) = @_;

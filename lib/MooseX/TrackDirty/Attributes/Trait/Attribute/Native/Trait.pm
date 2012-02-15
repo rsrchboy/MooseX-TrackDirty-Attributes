@@ -1,6 +1,6 @@
 package MooseX::TrackDirty::Attributes::Trait::Attribute::Native::Trait;
 
-# ABSTRACT: Compatibility trait between trackdirty and native traits
+# ABSTRACT: Compatibility trait between the track-dirty and native traits
 
 use Moose::Role;
 use namespace::autoclean;

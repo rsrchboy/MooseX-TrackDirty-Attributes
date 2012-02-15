@@ -1,5 +1,6 @@
 package MooseX::TrackDirty::Attributes::Trait::Role::Composite;
-# Dist::Zilla: +PkgVersion
+
+# ABSTRACT: Apply our application::to* traits to any composition of our role and any other
 
 use Moose::Role;
 use namespace::autoclean;
@@ -8,6 +9,10 @@ use MooseX::TrackDirty::Attributes::Util ':all';
 
 # debugging...
 #use Smart::Comments;
+
+=method apply_params
+
+=cut
 
 around apply_params => sub {
     my ($orig, $self) = (shift, shift);

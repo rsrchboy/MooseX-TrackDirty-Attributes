@@ -1,6 +1,6 @@
 package MooseX::TrackDirty::Attributes::Util;
 
-# ABSTRACT: Laziness.
+# ABSTRACT: Laziness -- alias functions
 
 use strict;
 use warnings;
