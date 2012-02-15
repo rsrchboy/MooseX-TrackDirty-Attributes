@@ -2,6 +2,9 @@ Revision history for MooseX-TrackDirty-Attributes
 
 {{$NEXT}}
 
+1.900     2012-02-15 14:43:40 America/Los_Angeles
+- handle native traits!
+
 1.000     2011-09-28 17:49:29 America/Los_Angeles
 - "Recreate" the accessor metaclass each time we ask for it...
 - ...which means we can drop the v5.10 requirement.

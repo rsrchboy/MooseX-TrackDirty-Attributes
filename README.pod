@@ -1,12 +1,14 @@
 =pod
 
+=encoding utf-8
+
 =head1 NAME
 
 MooseX::TrackDirty::Attributes - Track dirtied attributes
 
 =head1 VERSION
 
-version 1.000
+This document describes 1.900 of MooseX::TrackDirty::Attributes - released February 15, 2012 as part of MooseX-TrackDirty-Attributes.
 
 =head1 SYNOPSIS
 
@@ -50,28 +52,40 @@ builder, default, accessor, etc.)
 
 An attribute can be returned to a clean state by invoking its clearer.
 
-=head1 WARNING!
-
-Note that the API used here is incompatible with the previous version.
-Sorry about that :\
+=for stopwords HashRef's
 
 =head1 CAVEAT
 
-Note that with few exceptions we can only track
+Note that with one (significant) exceptions we can only track
 dirtiness at the very first level.  That is, if you have an attribute that is
-a HashRef, we can tell that the _attribute_ is dirty iff the actual ref
-changes, but not if the HashRef's keys/values change. e.g.
-$self->hashref({ new => 'hash' }) would render the 'hashref' attribute dirty,
-but $self->hashref->{foo} = 'bar' would not.
+a HashRef, we can tell that the _attribute_ is dirty if and only if the
+actual ref changes, but not if the HashRef's keys/values change. e.g.
+
+    $self->hashref({ new => 'hash' })
+
+would render the 'hashref' attribute dirty, but
+
+    $self->hashref->{foo} = 'bar'
+
+would not.
 
 In plainer language: we can only tell if an attribute's value is dirty if our
 accessors are used to modify its values.
 
+The exception to this is...
+
+=head1 IMPLICATIONS FOR NATIVE TRAITS
+
+We now track when a native trait accessor is used to change the contents of
+the attribute; this is considered to make the attribute value dirty.
+
+This is still new and experimental, so feedback is quite welcome :)
+
 =head1 ATTRIBUTE OPTIONS
 
 To track a given attribute, the trait must be applied.  This package exports a
-"TrackDirty" function that returns the full (ridiculously long) package nameof
-the trait.
+"TrackDirty" function that returns the full (ridiculously long) package name
+of the trait.
 
 Once applied, we have two additional options that can be passed to the
 attribute constructor (usually via 'has'):
@@ -101,6 +115,20 @@ If a legal method name is passed, the accessor is installed under that name;
 Otherwise we blow up.
 
 =back
+
+=head1 SOURCE
+
+The development version is on github at L<http://github.com/RsrchBoy/moosex-trackdirty-attributes>
+and may be cloned from L<git://github.com/RsrchBoy/moosex-trackdirty-attributes.git>
+
+=head1 BUGS
+
+Please report any bugs or feature requests on the bugtracker website
+https://github.com/RsrchBoy/moosex-trackdirty-attributes/issues
+
+When submitting a bug or request, please include a test-file or a
+patch to an existing test-file that illustrates the bug or desired
+feature.
 
 =head1 AUTHOR
 
