@@ -18,7 +18,7 @@ around apply_params => sub {
             role => [ trait_for 'Role' ],
             application_to_class    => [ ToClass    ],
             application_to_role     => [ ToRole     ],
-            #application_to_instance => [ ToInstance ],
+            application_to_instance => [ ToInstance ],
         },
     );
 };

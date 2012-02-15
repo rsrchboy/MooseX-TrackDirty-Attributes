@@ -8,13 +8,11 @@ use MooseX::TrackDirty::Attributes::Util ':all';
 # debug...
 #use Smart::Comments;
 
-requires 'add_role_application';
-
 # ensure that future applications of a native trait will be handled correctly
 after add_role_application => sub {
     my ($self, $application) = @_;
 
-    my @roles = map { $_->name } $self->calculate_all_roles;
+    #my @roles = map { $_->name } $self->calculate_all_roles;
     ### @roles
 
     ### in add_role_application (after)...

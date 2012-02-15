@@ -18,7 +18,7 @@ Moose::Util::MetaRole::apply_metaroles(
         role                    => [ trait_for 'Role' ],
         application_to_class    => [ ToClass          ],
         application_to_role     => [ ToRole           ],
-        #application_to_instance => [ ToInstance      ],
+        application_to_instance => [ ToInstance       ],
     },
 );
 
@@ -192,7 +192,9 @@ override accessor_metaclass => sub {
     return $classname;
 };
 
-after install_accessors => sub {
+after install_accessors => sub { shift->install_trackdirty_accessors(@_) };
+
+sub install_trackdirty_accessors {
     my ($self, $inline) = @_;
     my $class = $self->associated_class;
 
@@ -207,7 +209,9 @@ after install_accessors => sub {
     return;
 };
 
-before remove_accessors => sub {
+before remove_accessors => sub { shift->remove_trackdirty_accessors(@_) };
+
+sub remove_trackdirty_accessors {
     my $self = shift @_;
 
     # stolen from Class::MOP::Attribute

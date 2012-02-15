@@ -23,7 +23,7 @@ around apply => sub {
                 role                    => [ trait_for 'Role' ],
                 application_to_class    => [ ToClass          ],
                 application_to_role     => [ __PACKAGE__      ],
-                #application_to_instance => [ ToInstance       ],
+                application_to_instance => [ ToInstance       ],
             },
         ),
     );
