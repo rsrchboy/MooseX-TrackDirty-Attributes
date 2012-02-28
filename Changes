@@ -2,6 +2,9 @@ Revision history for MooseX-TrackDirty-Attributes
 
 {{$NEXT}}
 
+2.000     2012-02-28 14:38:21 America/Los_Angeles
+- require Test::Moose::More 0.005+
+
 1.900     2012-02-15 14:43:40 America/Los_Angeles
 - handle native traits!
 
