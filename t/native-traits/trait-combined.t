@@ -33,7 +33,7 @@ use warnings;
 }
 
 use Test::More;
-use Test::Moose::More;
+use Test::Moose::More 0.005;
 
 require 't/funcs.pm' unless eval { require funcs };
 

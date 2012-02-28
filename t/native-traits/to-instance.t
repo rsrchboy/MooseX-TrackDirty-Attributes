@@ -26,7 +26,7 @@ my $trait_name;
 }
 
 use Test::More;
-use Test::Moose::More;
+use Test::Moose::More 0.005;
 
 use Class::Load;
 use Moose::Util;
