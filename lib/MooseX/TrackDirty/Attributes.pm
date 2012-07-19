@@ -123,6 +123,17 @@ If a legal method name is passed, the accessor is installed under that name;
 
 Otherwise we blow up.
 
+=item cleaner => method_name
+
+cleaner controls what the name for the cleaner accessor is
+installed (marks a dirty attribute as clean without clearing):
+
+By default, we do not install an original_value accessor;
+
+If a legal method name is passed, the accessor is installed under that name;
+
+Otherwise we blow up.
+
 =back
 
 =cut

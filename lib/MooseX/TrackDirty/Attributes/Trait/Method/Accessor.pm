@@ -8,6 +8,40 @@ use namespace::autoclean;
 # debugging
 #use Smart::Comments '###', '####';
 
+sub _generate_cleaner_method {
+    my $self = shift;
+    my $attr = $self->associated_attribute;
+
+    return sub {
+        confess "Clearer accessors take no arguments"
+            if @_ > 1;
+        $attr->mark_clean($_[0]);
+    };
+}
+
+sub _generate_cleaner_method_inline {
+    my $self = shift;
+    my $attr = $self->associated_attribute;
+
+    return try {
+        $self->_compile_code([
+            'sub {',
+                'if (@_ > 1) {',
+                    # XXX: this is a hack, but our error stuff is terrible
+                    $self->_inline_throw_error(
+                        '"Clearer accessors take no arguments"',
+                        'data => \@_'
+                    ) . ';',
+                '}',
+                $attr->_inline_mark_clean('$_[0]'),
+            '}',
+        ]);
+    }
+    catch {
+        confess "Could not generate inline clearer because : $_";
+    };
+}
+
 sub _generate_original_value_method {
     my $self = shift;
     my $attr = $self->associated_attribute;
@@ -41,7 +75,6 @@ sub _generate_original_value_method_inline {
         confess "Could not generate inline original_value because : $_";
     };
 }
-
 
 sub _generate_is_dirty_method {
     my $self = shift;
