@@ -38,7 +38,10 @@ has dirty_slot => (is => 'lazy', isa => 'Str');
 sub _build_value_slot { shift->name                        }
 sub _build_dirty_slot { shift->name . '__DIRTY_TRACKING__' }
 
-override slots => sub { (super, shift->dirty_slot) };
+around slots => sub {
+    my ($orig, $self) = @_;
+    return ($self->$orig(), $self->dirty_slot);
+};
 
 before set_value => sub {
     my ($self, $instance) = @_;
@@ -187,11 +190,11 @@ sub clear_dirty_slot {
         ;
 }
 
-override accessor_metaclass => sub {
-    my $self = shift @_;
+around accessor_metaclass => sub {
+    my ($orig,$self,@args) = @_;
 
     my $classname = Moose::Meta::Class->create_anon_class(
-        superclasses => [ super ],
+        superclasses => [ $self->$orig(@args) ],
         roles        => [ 'MooseX::TrackDirty::Attributes::Trait::Method::Accessor' ],
         cache        => 1,
     )->name;
