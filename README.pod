@@ -2,7 +2,7 @@
 
 =encoding utf-8
 
-=for :stopwords Chris Weyl HashRef's
+=for :stopwords Chris Weyl Gianni Ceccarelli attribute's HashRef's
 
 =head1 NAME
 
@@ -10,7 +10,7 @@ MooseX::TrackDirty::Attributes - Track dirtied attributes
 
 =head1 VERSION
 
-This document describes version 2.001 of MooseX::TrackDirty::Attributes - released July 19, 2012 as part of MooseX-TrackDirty-Attributes.
+This document describes version 2.002 of MooseX::TrackDirty::Attributes - released November 24, 2012 as part of MooseX-TrackDirty-Attributes.
 
 =head1 SYNOPSIS
 
@@ -144,6 +144,10 @@ feature.
 =head1 AUTHOR
 
 Chris Weyl <cweyl@alumni.drew.edu>
+
+=head1 CONTRIBUTOR
+
+Gianni Ceccarelli <gianni.ceccarelli@net-a-porter.com>
 
 =head1 COPYRIGHT AND LICENSE
 

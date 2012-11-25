@@ -2,6 +2,11 @@ Revision history for MooseX-TrackDirty-Attributes
 
 {{$NEXT}}
 
+2.002     2012-11-24 16:35:39 PST8PDT
+
+	* use around, not override, to modify methods; this helps prevent
+	  conflicts with other traits [Gianni Ceccarelli]
+
 2.001     2012-07-19 13:10:25 America/Los_Angeles
 
 	* add "cleaner" attribute option to generate an accessor capable of marking
