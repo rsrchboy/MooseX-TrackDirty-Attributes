@@ -5,13 +5,13 @@ package MooseX::TrackDirty::Attributes::Util;
 use strict;
 use warnings;
 
-use Sub::Exporter -setup => {
+use Sub::Exporter::Progressive -setup => {
     exports => [ qw{
         trait_for application
         Composite ToRole ToClass ToInstance
         AccessorNativeTrait TrackDirtyNativeTrait
     } ],
-    groups => { default => ':all' },
+    groups => { default => [ ':all' ] },
 };
 
 sub trait_for($)            { "MooseX::TrackDirty::Attributes::Trait::$_[0]" }
