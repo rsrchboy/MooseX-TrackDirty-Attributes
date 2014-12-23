@@ -1,6 +1,8 @@
 Revision history for MooseX-TrackDirty-Attributes
 
 {{$NEXT}}
+
+2.003     2014-12-23 14:40:49 PST-0800
 	* Apparently we can no longer rely on $self->name to return a value when
 	  called in an attribute builder on an attribute metaclass... Or
 	  something.  Don't rely on the builder, but work around and skip related

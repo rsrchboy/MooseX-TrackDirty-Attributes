@@ -4,7 +4,7 @@ MooseX::TrackDirty::Attributes - Track dirtied attributes
 
 # VERSION
 
-This document describes version 2.003 of MooseX::TrackDirty::Attributes - released December 22, 2014 as part of MooseX-TrackDirty-Attributes.
+This document describes version 2.003 of MooseX::TrackDirty::Attributes - released December 23, 2014 as part of MooseX-TrackDirty-Attributes.
 
 # SYNOPSIS
 
