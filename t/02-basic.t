@@ -34,8 +34,12 @@ with_immutable {
     validate_class 'TestClass' => (
         attributes => [ qw{ one lazy } ],
         methods    => [ qw{
-            one mark_one_clean original_value_of_one
-            clear_one has_one _build_one
+            _build_one
+            clear_one has_one
+            mark_one_clean
+            one
+            one_is_dirty
+            original_value_of_one
         } ],
     );
 
