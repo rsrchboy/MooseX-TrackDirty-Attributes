@@ -25,7 +25,7 @@ my $trait_name;
     $trait_name = TrackDirty;
 }
 
-use Test::More;
+use Test::More skip_all => 'needs _process_options() to be called';
 use Test::Moose::More 0.005;
 
 use Class::Load;

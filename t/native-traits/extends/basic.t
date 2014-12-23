@@ -31,7 +31,7 @@ use warnings;
     );
 }
 
-use Test::More;
+use Test::More skip_all => 'needs _process_options() to be called';
 use Test::Moose::More 0.005;
 
 require 't/funcs.pm' unless eval { require funcs };
