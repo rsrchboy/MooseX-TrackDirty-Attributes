@@ -1,6 +1,12 @@
 Revision history for MooseX-TrackDirty-Attributes
 
 {{$NEXT}}
+	* Apparently we can no longer rely on $self->name to return a value when
+	  called in an attribute builder on an attribute metaclass... Or
+	  something.  Don't rely on the builder, but work around and skip related
+	  tests until this gets sorted properly -- in any case, trait application
+	  during attribute extension or to a metaclass instance are likely to
+	  be... atypical.
 
 2.002     2012-11-24 16:35:39 PST8PDT
 
