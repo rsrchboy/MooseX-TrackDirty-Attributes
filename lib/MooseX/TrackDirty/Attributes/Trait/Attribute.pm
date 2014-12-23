@@ -26,11 +26,20 @@ Moose::Util::MetaRole::apply_metaroles(
 # debugging
 #use Smart::Comments '###', '####';
 
-has is_dirty       => (is => 'ro', isa => Identifier, predicate => 1, builder => 1);
+has is_dirty       => (is => 'ro', isa => Identifier, predicate => 1);
 has original_value => (is => 'ro', isa => Identifier, predicate => 1);
 has cleaner        => (is => 'ro', isa => Identifier, predicate => 1);
 
-sub _build_is_dirty { shift->name . '_is_dirty' }
+# ensure that our is_dirty option is correct, as we apparently cannot rely on
+# $self->name anymore.  *le sigh*
+after _process_options => sub {
+    my ($class, $name, $options) = @_;
+
+    $options->{is_dirty} = $name . '_is_dirty'
+        unless defined $options->{is_dirty};
+
+    return;
+};
 
 has value_slot => (is => 'lazy', isa => 'Str');
 has dirty_slot => (is => 'lazy', isa => 'Str');
