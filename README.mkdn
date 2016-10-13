@@ -1,10 +1,14 @@
+[![Build Status](https://travis-ci.org/RsrchBoy/moosex-trackdirty-attributes.svg?branch=master)](https://travis-ci.org/RsrchBoy/moosex-trackdirty-attributes)
+[![Kwalitee status](http://cpants.cpanauthors.org/dist/MooseX-TrackDirty-Attributes.png)](http://cpants.charsbar.org/dist/overview/MooseX-TrackDirty-Attributes)
+[![Coverage Status](https://coveralls.io/repos/RsrchBoy/moosex-trackdirty-attributes/badge.svg?branch=master)](https://coveralls.io/r/RsrchBoy/moosex-trackdirty-attributes?branch=master)
+
 # NAME
 
 MooseX::TrackDirty::Attributes - Track dirtied attributes
 
 # VERSION
 
-This document describes version 2.003 of MooseX::TrackDirty::Attributes - released December 23, 2014 as part of MooseX-TrackDirty-Attributes.
+This document describes version 2.004 of MooseX::TrackDirty::Attributes - released October 12, 2016 as part of MooseX-TrackDirty-Attributes.
 
 # SYNOPSIS
 
@@ -89,10 +93,8 @@ attribute constructor (usually via 'has'):
     is\_dirty controls what the name of the "is this attribute's value dirty?"
     accessor is (returning true on dirty; false otherwise):
 
-    By default, the accessor is installed as "{attribute\_name}\_is\_dirty";
-
-    If a legal method name is passed, the accessor is installed under that name;
-
+    By default, the accessor is installed as "{attribute\_name}\_is\_dirty".  If a
+    legal method name is passed, the accessor is installed under that name.
     Otherwise we blow up.
 
 - original\_value => method\_name
@@ -100,32 +102,22 @@ attribute constructor (usually via 'has'):
     original\_value controls what the name for the original value accessor is
     installed (returns the original value if dirty, undef otherwise):
 
-    By default, we do not install an original\_value accessor;
-
-    If a legal method name is passed, the accessor is installed under that name;
-
-    Otherwise we blow up.
+    By default, we do not install an original\_value accessor.  If a legal method
+    name is passed, the accessor is installed under that name. Otherwise we blow
+    up.
 
 - cleaner => method\_name
 
     cleaner controls what the name for the cleaner accessor is
     installed (marks a dirty attribute as clean without clearing):
 
-    By default, we do not install an original\_value accessor;
-
-    If a legal method name is passed, the accessor is installed under that name;
-
-    Otherwise we blow up.
-
-# SOURCE
-
-The development version is on github at [http://https://github.com/RsrchBoy/moosex-trackdirty-attributes](http://https://github.com/RsrchBoy/moosex-trackdirty-attributes)
-and may be cloned from [git://https://github.com/RsrchBoy/moosex-trackdirty-attributes.git](git://https://github.com/RsrchBoy/moosex-trackdirty-attributes.git)
+    By default, we do not install an cleaner accessor.  If a legal method name is
+    passed, the accessor is installed under that name.  Otherwise we blow up.
 
 # BUGS
 
 Please report any bugs or feature requests on the bugtracker website
-https://github.com/RsrchBoy/moosex-trackdirty-attributes/issues
+[https://github.com/RsrchBoy/moosex-trackdirty-attributes/issues](https://github.com/RsrchBoy/moosex-trackdirty-attributes/issues)
 
 When submitting a bug or request, please include a test-file or a
 patch to an existing test-file that illustrates the bug or desired
@@ -138,7 +130,7 @@ Chris Weyl <cweyl@alumni.drew.edu>
 ## I'm a material boy in a material world
 
 <div>
-    <a href="https://www.gittip.com/RsrchBoy/"><img src="https://raw.githubusercontent.com/gittip/www.gittip.com/master/www/assets/%25version/logo.png" /></a>
+    <a href="https://gratipay.com/RsrchBoy/"><img src="http://img.shields.io/gratipay/RsrchBoy.svg" /></a>
     <a href="http://bit.ly/rsrchboys-wishlist"><img src="http://wps.io/wp-content/uploads/2014/05/amazon_wishlist.resized.png" /></a>
     <a href="https://flattr.com/submit/auto?user_id=RsrchBoy&url=https%3A%2F%2Fgithub.com%2FRsrchBoy%2Fmoosex-trackdirty-attributes&title=RsrchBoy's%20CPAN%20MooseX-TrackDirty-Attributes&tags=%22RsrchBoy's%20MooseX-TrackDirty-Attributes%20in%20the%20CPAN%22"><img src="http://api.flattr.com/button/flattr-badge-large.png" /></a>
 </div>
@@ -148,9 +140,9 @@ rather **it is simply a very pleasant surprise**. I largely create and release
 works like this because I need them or I find it enjoyable; however, don't let
 that stop you if you feel like it ;)
 
-[Flattr this](https://flattr.com/submit/auto?user_id=RsrchBoy&url=https%3A%2F%2Fgithub.com%2FRsrchBoy%2Fmoosex-trackdirty-attributes&title=RsrchBoy&#x27;s%20CPAN%20MooseX-TrackDirty-Attributes&tags=%22RsrchBoy&#x27;s%20MooseX-TrackDirty-Attributes%20in%20the%20CPAN%22),
-[gittip me](https://www.gittip.com/RsrchBoy/), or indulge my
-[Amazon Wishlist](http://bit.ly/rsrchboys-wishlist)...  If you so desire.
+[Flattr](https://flattr.com/submit/auto?user_id=RsrchBoy&url=https%3A%2F%2Fgithub.com%2FRsrchBoy%2Fmoosex-trackdirty-attributes&title=RsrchBoy&#x27;s%20CPAN%20MooseX-TrackDirty-Attributes&tags=%22RsrchBoy&#x27;s%20MooseX-TrackDirty-Attributes%20in%20the%20CPAN%22),
+[Gratipay](https://gratipay.com/RsrchBoy/), or indulge my
+[Amazon Wishlist](http://bit.ly/rsrchboys-wishlist)...  If and \*only\* if you so desire.
 
 # CONTRIBUTOR
 
