@@ -106,10 +106,8 @@ attribute constructor (usually via 'has'):
 is_dirty controls what the name of the "is this attribute's value dirty?"
 accessor is (returning true on dirty; false otherwise):
 
-By default, the accessor is installed as "{attribute_name}_is_dirty";
-
-If a legal method name is passed, the accessor is installed under that name;
-
+By default, the accessor is installed as "{attribute_name}_is_dirty".  If a
+legal method name is passed, the accessor is installed under that name.
 Otherwise we blow up.
 
 =item original_value => method_name
@@ -117,22 +115,17 @@ Otherwise we blow up.
 original_value controls what the name for the original value accessor is
 installed (returns the original value if dirty, undef otherwise):
 
-By default, we do not install an original_value accessor;
-
-If a legal method name is passed, the accessor is installed under that name;
-
-Otherwise we blow up.
+By default, we do not install an original_value accessor.  If a legal method
+name is passed, the accessor is installed under that name. Otherwise we blow
+up.
 
 =item cleaner => method_name
 
 cleaner controls what the name for the cleaner accessor is
 installed (marks a dirty attribute as clean without clearing):
 
-By default, we do not install an original_value accessor;
-
-If a legal method name is passed, the accessor is installed under that name;
-
-Otherwise we blow up.
+By default, we do not install an cleaner accessor.  If a legal method name is
+passed, the accessor is installed under that name.  Otherwise we blow up.
 
 =back
 
